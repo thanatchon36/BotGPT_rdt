@@ -350,13 +350,17 @@ if st.session_state["authentication_status"]:
     # Check if there's a user input prompt
         # with st.chat_message("AI"):
         #     st.write("Hello 👋")
-    if prompt := st.chat_input(placeholder="Kindly input your query or command for prompt assistance..."):
+    
+    prompt = st.chat_input(placeholder="Kindly input your query or command for prompt assistance...", disabled=False, key = 1)
+    if prompt:
         Is_Human_Required = True
         if Is_Human_Required == True:
             st.chat_message("user", avatar = user_image).write(prompt)
             st.session_state.messages.append({"role": "user", "content": prompt, "raw_content": ""})
             st.session_state.context.append({"role": "user", "content": ""})
-        with st.spinner('Thinking...'):                        
+        with st.spinner('Thinking...'):
+            st.chat_input(placeholder="Kindly input your query or command for prompt assistance...", disabled=True, key = 2)  # Use a unique key for each chat input
+            i = 0
             while True:
                 cube_list = []
                 if smart_cube_1:
@@ -429,6 +433,10 @@ if st.session_state["authentication_status"]:
                 else:
                     prompt = " "
 
+                i = i + 1
+                if i >= 10:
+                    break
+
             csv_file = f"data/{st.session_state.username}.csv"
             file_exists = os.path.isfile(csv_file)
             if not file_exists:
@@ -441,6 +449,10 @@ if st.session_state["authentication_status"]:
                 st.session_state.turn_id = current_time
                 writer.writerow([st.session_state.username, st.session_state.chat_id, st.session_state.turn_id, prompt, full_response, "", "", context_radio, frontend_query_time, "", response_dict['history']])
             st.rerun()
+
+        st.chat_input(placeholder="Kindly input your query or command for prompt assistance...", disabled=False, key = 3)
+
+        st.rerun()
 
 elif st.session_state["authentication_status"] == False:
     st.error("Username/password is incorrect. If you encounter any issues related to user login, please contact Thanatchon Chongmankhong at thanatcc@bot.or.th.")
