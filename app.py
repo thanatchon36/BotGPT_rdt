@@ -17,7 +17,7 @@ def get_response_2(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/rdt_brainstorming'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 120).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
@@ -26,7 +26,7 @@ def get_response_3(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/metadata'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 120).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
@@ -35,11 +35,52 @@ def get_response_4(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/botgpt_query_autogen'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 120).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
     return result
+def get_response_dev(prompt, temperature, context = []):
+    start_time = time.time()
+    time.sleep(3)
+    execution_time = time.time() - start_time
+    execution_time = round(execution_time, 2)
+    return {'response': 'response', 'raw_input': 'raw_input', 'raw_output': 'raw_output', 'engine': 'engine', 'frontend_query_time': execution_time, 'backend_query_time': execution_time}
+
+def get_response_dev_2(message, history):
+    # start_time = time.time()
+    # time.sleep(3)
+    # execution_time = time.time() - start_time
+    # execution_time = round(execution_time, 2)
+    return {'response': {'content': 'หากต้องการหา transaction รายเดือนของรายธนาคาร สามารถใช้ SQL ดังนี้:\n\n```sql\nSELECT\n    YEAR(transaction_date) AS year,\n    MONTH(transaction_date) AS month,\n    bank_name,\n    COUNT(*) AS transaction_count\nFROM\n    transactions\nGROUP BY\n    YEAR(transaction_date),\n    MONTH(transaction_date),\n    bank_name\nORDER BY\n    YEAR(transaction_date),\n    MONTH(transaction_date),\n    bank_name;\n```\n\nในตัวอย่าง SQL นี้ เราใช้คอลัมน์ `transaction_date` เพื่อหาปีและเดือนของแต่ละ transaction และใช้คอลัมน์ `bank_name` เพื่อแสดงรายธนาคารที่นำส่ง transaction นี้ สุดท้ายแล้วนับจำนวน transaction ทั้งหมดที่มีในแต่ละปีและเดือน และเรียงลำดับตามปีที่ก่อน (จากน้อยไปมาก) และเดือนที่ก่อน (จากมกราคมถึงธันวาคม) และแสดงผลลัพธ์ในรูปแบบตาราง\n\n[TERMINATE]',
+  'role': 'user',
+  'name': 'SQL_Writer'},
+ 'history': [{'content': 'อยากทราบการเปลี่ยนแปลงข้อมูลราย transaction รายเดือนของรายธนาคาร',
+   'role': 'user',
+   'name': 'User_proxy'},
+  {'content': 'ฉันคิดว่าคุณอาจสนใจ cube 9 ที่มีข้อมูลสินเชื่อราย Account ราย Transaction รายวัน ซึ่งสามารถให้ข้อมูลเกี่ยวกับการเปลี่ยนแปลงข้อมูลราย transaction รายเดือนของรายธนาคารได้\n\nคุณต้องการให้ฉันช่วยเลือกตัวแปรที่เกี่ยวข้องกับคำถามจาก cube 9 หรือไม่ หรือถ้าคุณมีข้อเสนอแนะเกี่ยวกับ cube อื่น ๆ ที่คุณอยากให้ฉันพิจารณาด้วย กรุณาบอกฉันเสมอนะครับ',
+   'role': 'user',
+   'name': 'Cube_Selector'},
+  {'content': 'โอเครได้เลย', 'role': 'user', 'name': 'Decision_Agent'},
+  {'tool_calls': [{'id': 'call_B0pwzCSpcB5nivMknU8P9OTa',
+     'function': {'arguments': '{\n  "user_question": "What is the population of Thailand?",\n  "qdrant_number": 3\n}',
+      'name': 'API_Retriever'},
+     'type': 'function'}],
+   'content': '',
+   'role': 'assistant',
+   'name': 'API_Caller'},
+  {'content': 'ตัวแปรต่อไปนี้คือตัวแปรที่เกี่ยวข้องกับคำถามของท่านที่เราได้ดึงมาจาก Cube 3 โดยการจัดอันดับของ RAG pipeline:\n1.) key_organization_id\n2.) key_br_organization_name\n3.) key_br_organization_name_eng\n4.) key_debtor_group_id\n5.) key_counterparty_id\n6.) f1_br_8_organization_country_name_eng\n7.) f1_br_9_organization_country_name\n8.) f4_22_business_loan_profile_main_factory_location_province_name\nท่านพอใจกับ cube ที่เราได้เลือกและตัวแปรเหล่านี้หรือไม่ หากไม่รบกวนระบุข้อเสนอแนะเบื้องต้นเพื่อที่เราจะสามารถเลือก cube ใหม่ที่ตรงความต้องการท่านได้ [TERMINATE]',
+   'tool_responses': [{'tool_call_id': 'call_B0pwzCSpcB5nivMknU8P9OTa',
+     'role': 'tool',
+     'content': 'ตัวแปรต่อไปนี้คือตัวแปรที่เกี่ยวข้องกับคำถามของท่านที่เราได้ดึงมาจาก Cube 3 โดยการจัดอันดับของ RAG pipeline:\n1.) key_organization_id\n2.) key_br_organization_name\n3.) key_br_organization_name_eng\n4.) key_debtor_group_id\n5.) key_counterparty_id\n6.) f1_br_8_organization_country_name_eng\n7.) f1_br_9_organization_country_name\n8.) f4_22_business_loan_profile_main_factory_location_province_name\nท่านพอใจกับ cube ที่เราได้เลือกและตัวแปรเหล่านี้หรือไม่ หากไม่รบกวนระบุข้อเสนอแนะเบื้องต้นเพื่อที่เราจะสามารถเลือก cube ใหม่ที่ตรงความต้องการท่านได้ [TERMINATE]'}],
+   'role': 'tool',
+   'name': 'Field_Finder'},
+  {'content': 'เขียน SQL เพื่อหา transaction รายเดือนของรายธนาคาร',
+   'role': 'user',
+   'name': 'Loop_Agent'},
+  {'content': 'หากต้องการหา transaction รายเดือนของรายธนาคาร สามารถใช้ SQL ดังนี้:\n\n```sql\nSELECT\n    YEAR(transaction_date) AS year,\n    MONTH(transaction_date) AS month,\n    bank_name,\n    COUNT(*) AS transaction_count\nFROM\n    transactions\nGROUP BY\n    YEAR(transaction_date),\n    MONTH(transaction_date),\n    bank_name\nORDER BY\n    YEAR(transaction_date),\n    MONTH(transaction_date),\n    bank_name;\n```\n\nในตัวอย่าง SQL นี้ เราใช้คอลัมน์ `transaction_date` เพื่อหาปีและเดือนของแต่ละ transaction และใช้คอลัมน์ `bank_name` เพื่อแสดงรายธนาคารที่นำส่ง transaction นี้ สุดท้ายแล้วนับจำนวน transaction ทั้งหมดที่มีในแต่ละปีและเดือน และเรียงลำดับตามปีที่ก่อน (จากน้อยไปมาก) และเดือนที่ก่อน (จากมกราคมถึงธันวาคม) และแสดงผลลัพธ์ในรูปแบบตาราง\n\n[TERMINATE]',
+   'role': 'user',
+   'name': 'SQL_Writer'}]}
 
 def reset(df):
     cols = df.columns
@@ -80,7 +121,7 @@ button_name_list = ["RDT Brainstorming",
                     "RDT Copilot - SQL Coder",
                     ]
 
-hidden_agent_name_list = ["cube_analyst", "information_gathering_agent", "cube_selector_assistant"]
+hidden_agent_name_list = ["cube_analyst", "information_gathering_agent", "cube_selector_assistant","cube_selector_assistant_selected_cube"]
 
 if st.session_state["authentication_status"]:
     
@@ -108,6 +149,12 @@ if st.session_state["authentication_status"]:
             button_name_list
         )
 
+        # temperature_value = st.slider(
+        #         'Select a temperature',
+        #         0.0, 1.0, 1.0, step=0.05
+        #         )
+        
+        smart_cube_1 = False
         cube_1 = False
         cube_1_1 = False
         cube_3 = False
@@ -118,9 +165,9 @@ if st.session_state["authentication_status"]:
         cube_8 = False
         cube_8_1 = False
         cube_9 = False
-        smart_cube = False
-
-        with st.expander("Select Cube"):
+        
+        with st.expander("Select Cube", expanded = True):
+            smart_cube_1 = st.checkbox("Smart_cube_1", value = True)
             cube_1 = st.checkbox("Cube_1")
             cube_1_1 = st.checkbox("Cube_1_1")
             cube_3 = st.checkbox("Cube_3")
@@ -131,7 +178,7 @@ if st.session_state["authentication_status"]:
             cube_8 = st.checkbox("Cube_8")
             cube_8_1 = st.checkbox("Cube_8_1")
             cube_9 = st.checkbox("Cube_9")
-            smart_cube = st.checkbox("Smart_cube")
+            
         # dev_checkbox = st.checkbox('Development')
         
         csv_file = f"data/{st.session_state.username}.csv"
@@ -241,6 +288,61 @@ if st.session_state["authentication_status"]:
             else:
                 with st.chat_message(message["role"], avatar = bot_image_2):
                     st.markdown(message["content"])
+                # col1, col2, col3 = st.columns(3)
+                # if context_radio != button_name_list[2]:
+                # with col1:
+                #     feedback_options = ["...",
+                #                         "😄", 
+                #                         "🙂",
+                #                         "😐",
+                #                         "🙁",
+                #                         ]
+                #     feedback_radio_1 = st.radio(
+                #                         "ความพึงพอใจในการใช้งาน:",
+                #                         feedback_options,
+                #                         key='radio_1_' + str(message_i) + message['turn_id'],
+                #                     )
+                #     if feedback_radio_1 != '...':
+                #         csv_file = f"data/feedback.csv"
+                #         file_exists = os.path.isfile(csv_file)
+                #         if not file_exists:
+                #             with open(csv_file, mode='a', newline='') as file:
+                #                 writer = csv.writer(file)
+                #                 writer.writerow(['username','chat_id','turn_id','feedback_text'])
+                #         with open(csv_file, mode='a', newline='') as file:
+                #             writer = csv.writer(file)
+                #             writer.writerow([st.session_state.username, st.session_state.chat_id, message['turn_id'], feedback_radio_1,])
+                #         st.success("Thanks! Your valuable feedback is updated in the database.")
+                # with col2:
+                    # if context_radio == button_name_list[1]:
+                    #     feedback_options = ["...",
+                    #                         "คำตอบถูกต้องครบถ้วน",
+                    #                         "คำตอบถูกต้องบางส่วน",
+                    #                         "คำตอบไม่ถูกต้อง",
+                    #                         "คำตอบไม่เกี่ยวข้องกับคำถาม"]
+                    # elif context_radio == button_name_list[2]:
+                    # feedback_options = ["...",
+                    #                     "เลือก field ผิด",
+                    #                     "เลือก field ถูกแต่ไม่ครบถ้วน",
+                    #                     "เลือก field ถูกแต่ SQL ไม่ตอบโจทย์",
+                    #                     "เลือก field ถูกแต่ SQL syntax ผิด",
+                    #                     "ผลลัพธ์ถูกต้อง"]
+                    # feedback_radio_2 = st.radio(
+                    #                     "ความถูกต้องของคำตอบ:",
+                    #                     feedback_options,
+                    #                     key='radio_2_' + str(message_i) + message['turn_id'],
+                    #                 )
+                    # if feedback_radio_2 != '...':
+                    #     csv_file = f"data/feedback.csv"
+                    #     file_exists = os.path.isfile(csv_file)
+                    #     if not file_exists:
+                    #         with open(csv_file, mode='a', newline='') as file:
+                    #             writer = csv.writer(file)
+                    #             writer.writerow(['username','chat_id','turn_id','feedback_text'])
+                    #     with open(csv_file, mode='a', newline='') as file:
+                    #         writer = csv.writer(file)
+                    #         writer.writerow([st.session_state.username, st.session_state.chat_id, message['turn_id'], feedback_radio_2,])
+                    #     st.success("Thanks! Your valuable feedback is updated in the database.")
         else:
             with st.chat_message(message["role"], avatar = user_image):
                 st.markdown(message["content"])
@@ -257,6 +359,8 @@ if st.session_state["authentication_status"]:
         with st.spinner('Thinking...'):                        
             while True:
                 cube_list = []
+                if smart_cube_1:
+                    cube_list.append('smart_cube_1')
                 if cube_1:
                     cube_list.append('cube_1')
                 if cube_1_1:
@@ -277,8 +381,6 @@ if st.session_state["authentication_status"]:
                     cube_list.append('cube_8_1')
                 if cube_9:
                     cube_list.append('cube_9')
-                if smart_cube:
-                    cube_list.append('smart_cube')
                 if context_radio == button_name_list[0]:
                     response_dict = get_response_2(prompt, history = st.session_state.history, cube_list = cube_list)
                 elif context_radio == button_name_list[1]:
@@ -289,7 +391,7 @@ if st.session_state["authentication_status"]:
                 st.session_state.history = response_dict['history']
                 frontend_query_time = response_dict['frontend_query_time']
                 history_list = response_dict['history']
-                Is_Human_Required = response_dict['Is_Human_Required']
+                Is_Human_Required = response_dict['is_human_required']
 
                 agent_name = response_dict['response']['name']
                 
