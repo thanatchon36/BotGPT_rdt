@@ -17,7 +17,7 @@ def get_response_2(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/rdt_brainstorming'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False, timeout = 120).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 300).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
@@ -26,7 +26,7 @@ def get_response_3(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/metadata'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False, timeout = 120).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 300).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
@@ -35,7 +35,7 @@ def get_response_4(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/botgpt_query_autogen'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False, timeout = 120).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 300).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
@@ -86,22 +86,25 @@ def reset(df):
     cols = df.columns
     return df.reset_index()[cols]
 
+def popup_message(message, duration=3):
+    """
+    Displays a popup message and hides it automatically after the specified duration.
+
+    Args:
+        message (str): The message to be displayed.
+        duration (int, optional): The duration in seconds for the popup to be visible. Defaults to 3.
+    """
+
+    st.markdown(f'<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);   z-index: 9999;">{message}</div>', unsafe_allow_html=True)
+
+    # Hide the popup after the specified duration
+    time.sleep(duration)
+    st.markdown("", unsafe_allow_html=True)
+
 show_chat_history_no = 5
 admin_list = ['thanatcc', 'da']
 
 st.set_page_config(page_title = 'BotGPT', page_icon = 'fav.png', layout="wide")
-
-st.markdown("""
-    <style>
-        .reportview-container {
-            margin-top: -2em;
-        }
-        #MainMenu {visibility: hidden;}
-        .stDeployButton {display:none;}
-        footer {visibility: hidden;}
-        #stDecoration {display:none;}
-    </style>
-""", unsafe_allow_html=True)
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
@@ -129,13 +132,13 @@ if st.session_state["authentication_status"]:
         now = str(datetime.datetime.now())
         st.session_state.chat_id  = now
         st.session_state.history = []
-
+                    
     bot_image = Image.open('fav.png')
     bot_image_2 = Image.open('fav_3.png')
     user_image = Image.open('fav_2.png')
 
     with st.sidebar:
-        
+
         clear_session_click = st.button("New Chat")
         if clear_session_click:
             st.session_state.messages = []
@@ -143,6 +146,8 @@ if st.session_state["authentication_status"]:
             now = str(datetime.datetime.now())
             st.session_state.chat_id  = now
             st.session_state.history = []
+
+            st.session_state.reset = True
 
         context_radio = st.radio(
             "Task:",
@@ -210,7 +215,7 @@ if st.session_state["authentication_status"]:
                     for index, row in filter_hist_df_2.iterrows():
                         if st.session_state.chat_id != row['chat_id']:
                             history_list = literal_eval(fil_hist_df['history'].values[-1])
-                            chat_button_text = history_list[-1]['content']
+                            chat_button_text = history_list[0]['content']
                             chat_button_click = st.button(f"{chat_button_text[:30]}" + '...', key = row['chat_id'])
                             if chat_button_click:
                                 st.session_state.messages = []
@@ -237,6 +242,37 @@ if st.session_state["authentication_status"]:
                     if int(st.session_state['max_page']) > 1:
                         page = st.slider('Page No:', 1, int(st.session_state['max_page']), key = 'page')
 
+        if "reset" not in st.session_state:
+            st.session_state.reset = False
+
+        with st.expander("Report / Feedback"):
+            if "example" not in st.session_state:
+                st.session_state.example = "DEFAULT_NUMBER"
+                
+            feedback_chat_id = st.text_input("Chat ID", st.session_state.chat_id)
+            feedback_type = st.radio(
+                "Type",
+                ['Suggestion', 'Troubleshooting']
+            )
+            text = st.empty()
+            feedback_text = text.text_area("Detail...", value = "", key = st.session_state.chat_id + "_1")
+            
+            submit_button = st.button("Submit")
+
+            if submit_button:
+                csv_file = f"data/feedback.csv"
+                file_exists = os.path.isfile(csv_file)
+                if not file_exists:
+                    with open(csv_file, mode='a', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow(['username','chat_id','feedback_type','feedback_text'])
+                with open(csv_file, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow([st.session_state.username, st.session_state.chat_id, feedback_type, feedback_text,])
+                st.success('Your feedback has been submitted!')
+                time.sleep(2)
+                text.text_area("Detail...", value= "", key = st.session_state.chat_id + "_2")
+                
         with st.expander("Change Password"):
             try:
                 if authenticator.reset_password(st.session_state["username"], 'Reset password'):
@@ -288,69 +324,10 @@ if st.session_state["authentication_status"]:
             else:
                 with st.chat_message(message["role"], avatar = bot_image_2):
                     st.markdown(message["content"])
-                # col1, col2, col3 = st.columns(3)
-                # if context_radio != button_name_list[2]:
-                # with col1:
-                #     feedback_options = ["...",
-                #                         "😄", 
-                #                         "🙂",
-                #                         "😐",
-                #                         "🙁",
-                #                         ]
-                #     feedback_radio_1 = st.radio(
-                #                         "ความพึงพอใจในการใช้งาน:",
-                #                         feedback_options,
-                #                         key='radio_1_' + str(message_i) + message['turn_id'],
-                #                     )
-                #     if feedback_radio_1 != '...':
-                #         csv_file = f"data/feedback.csv"
-                #         file_exists = os.path.isfile(csv_file)
-                #         if not file_exists:
-                #             with open(csv_file, mode='a', newline='') as file:
-                #                 writer = csv.writer(file)
-                #                 writer.writerow(['username','chat_id','turn_id','feedback_text'])
-                #         with open(csv_file, mode='a', newline='') as file:
-                #             writer = csv.writer(file)
-                #             writer.writerow([st.session_state.username, st.session_state.chat_id, message['turn_id'], feedback_radio_1,])
-                #         st.success("Thanks! Your valuable feedback is updated in the database.")
-                # with col2:
-                    # if context_radio == button_name_list[1]:
-                    #     feedback_options = ["...",
-                    #                         "คำตอบถูกต้องครบถ้วน",
-                    #                         "คำตอบถูกต้องบางส่วน",
-                    #                         "คำตอบไม่ถูกต้อง",
-                    #                         "คำตอบไม่เกี่ยวข้องกับคำถาม"]
-                    # elif context_radio == button_name_list[2]:
-                    # feedback_options = ["...",
-                    #                     "เลือก field ผิด",
-                    #                     "เลือก field ถูกแต่ไม่ครบถ้วน",
-                    #                     "เลือก field ถูกแต่ SQL ไม่ตอบโจทย์",
-                    #                     "เลือก field ถูกแต่ SQL syntax ผิด",
-                    #                     "ผลลัพธ์ถูกต้อง"]
-                    # feedback_radio_2 = st.radio(
-                    #                     "ความถูกต้องของคำตอบ:",
-                    #                     feedback_options,
-                    #                     key='radio_2_' + str(message_i) + message['turn_id'],
-                    #                 )
-                    # if feedback_radio_2 != '...':
-                    #     csv_file = f"data/feedback.csv"
-                    #     file_exists = os.path.isfile(csv_file)
-                    #     if not file_exists:
-                    #         with open(csv_file, mode='a', newline='') as file:
-                    #             writer = csv.writer(file)
-                    #             writer.writerow(['username','chat_id','turn_id','feedback_text'])
-                    #     with open(csv_file, mode='a', newline='') as file:
-                    #         writer = csv.writer(file)
-                    #         writer.writerow([st.session_state.username, st.session_state.chat_id, message['turn_id'], feedback_radio_2,])
-                    #     st.success("Thanks! Your valuable feedback is updated in the database.")
         else:
             with st.chat_message(message["role"], avatar = user_image):
                 st.markdown(message["content"])
-                
-    # Check if there's a user input prompt
-        # with st.chat_message("AI"):
-        #     st.write("Hello 👋")
-    
+
     prompt = st.chat_input(placeholder="Kindly input your query or command for prompt assistance...", disabled=False, key = 1)
     if prompt:
         Is_Human_Required = True
