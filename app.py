@@ -17,7 +17,7 @@ def get_response_2(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/rdt_brainstorming'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False, timeout = 300).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 600).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
@@ -26,7 +26,7 @@ def get_response_3(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/metadata'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False, timeout = 300).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 600).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
@@ -35,7 +35,7 @@ def get_response_4(message, history, cube_list = []):
     start_time = time.time()
     url = 'https://pc140032645.bot.or.th/botgpt_query_autogen'
     myobj = { "prompt": message, "history": history, 'cube':  cube_list}
-    result = requests.post(url, json = myobj, verify = False, timeout = 300).json()
+    result = requests.post(url, json = myobj, verify = False, timeout = 600).json()
     execution_time = time.time() - start_time
     execution_time = round(execution_time, 2)
     result['frontend_query_time'] = execution_time
