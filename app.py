@@ -102,7 +102,7 @@ def popup_message(message, duration=3):
     st.markdown("", unsafe_allow_html=True)
 
 show_chat_history_no = 5
-admin_list = ['thanatcc', 'da', 'chinnawd', 'kawinwil']
+admin_list = ['thanatcc', 'da', 'chinnawd', 'kawinwil', 'nutchanp']
 
 st.set_page_config(page_title = 'BotGPT', page_icon = 'fav.png', layout="wide")
 
